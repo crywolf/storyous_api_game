@@ -1,12 +1,10 @@
 global._ = require 'underscore'
 express = require 'express'
-logger = require 'morgan'
-bodyParser = require 'body-parser'
+
+require './config/application'
 
 app = express()
-app.use logger('combined')
-app.use bodyParser.json() # for parsing application/json
-app.use bodyParser.urlencoded({ extended: true }) # for parsing application/x-www-form-urlencoded
+require('./config/config')(app)
 
 routes = require('./routes')(app)
 

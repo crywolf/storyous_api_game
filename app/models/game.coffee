@@ -2,7 +2,26 @@ Model = require './model'
 
 module.exports = class Game extends Model
 
-  create: (name) ->
+  persistance: {
+    modelName: 'game'
+    schema: {
+      name: String,
+      gameOver: Boolean,
+      score: Number,
+      playground: Array,
+      created_at: Date,
+      updated_at: Date
+    }
+  }
+
+  beforeSave: (schema, next) ->
+    currentDate = new Date()
+    schema.updated_at = currentDate
+    if not schema.created_at
+      schema.created_at = currentDate
+    next()
+
+  create: (name, done) ->
     playground = [
           [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
           [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
@@ -18,18 +37,26 @@ module.exports = class Game extends Model
           [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         ]
 
-    random_index = _.random(1, 11)
-    playground[1][random_index] = 3
+    randomIndex = _.random(1, 11)
+    playground[1][randomIndex] = 3
 
-    random_index = _.random(1, 11)
-    playground[playground.length - 2][random_index] = 2
+    randomIndex = _.random(1, 11)
+    playground[playground.length - 2][randomIndex] = 2
 
-    output = {
-      "gameId": "adj82j3nu23hn23uh2843h",  # the identifier
-      "name": name,
-      "gameOver": false,
-      "score": 0,
-      "playground": playground
-      }
+    attrs = {
+      name: name,
+      gameOver: false,
+      score: 0,
+      playground: playground
+    }
 
-    output
+    @save attrs, (record) ->
+      output = {
+        "gameId": record._id,
+        "name": name,
+        "gameOver": false,
+        "score": 0,
+        "playground": playground
+        }
+      
+      done output

@@ -22,7 +22,7 @@ all = {
 }
 
 try
-  environment_config = require('./' + all.env + '.coffee')
+  environmentConfig = require('./' + all.env + '.coffee')
 catch error
   throw new Error 'Missing /config/environment/'+ all.env + '.coffee file'
 
@@ -30,4 +30,4 @@ catch error
 # ==============================================
 module.exports = _.extend(
   all,
-  environment_config || {})
+  environmentConfig || {})

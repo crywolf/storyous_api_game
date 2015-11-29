@@ -8,5 +8,5 @@ module.exports = class GamesApi extends ApiController
       res.status(422).send(); return
 
     game = new Game
-    output = game.create(req.body.name)
-    res.send output
+    game.create req.body.name, (output) ->
+      res.send output

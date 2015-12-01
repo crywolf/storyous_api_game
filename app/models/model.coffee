@@ -8,8 +8,18 @@ module.exports = class Model
   }
 
   constructor: (attributes = {}) ->
+    @_attributes = attributes
     @_configurePersistance()
     @_addBeforeSaveCallback(@beforeSave)
+
+  getAttributes: ->
+    @_attributes
+
+  getAttribute: (name) ->
+    @_attributes[name]
+
+  getId: ->
+    @getAttribute '_id'
 
   _configurePersistance: ->
     if _.compact(_.values(@persistance)).length
@@ -27,20 +37,71 @@ module.exports = class Model
 
   save: (attrs, callback) ->
     throw Error('Undefined persistence schema in ' + @.constructor.modelName + ' model') unless @_mongooseModel
-    model = new @_mongooseModel attrs
-    model.save (err, persistedObject) ->
-      if err
-        console.error err
-      else
-        callback persistedObject
+
+    if @isPersisted() # update
+      @_mongooseModel.findById @getId(), (err, foundObject) =>
+        if err
+          @_processError err, callback
+        else
+          _.extend(foundObject, attrs)
+          foundObject.save (err, persistedObject) =>
+            if err
+              @_processError err, callback
+            else
+              @setAttributesFromDatabase(persistedObject)
+              callback this
+
+    else # create     
+      model = new @_mongooseModel attrs
+
+      model.save (err, persistedObject) =>
+        if err
+          @_processError err, callback
+        else
+          @setAttributesFromDatabase(persistedObject)
+          callback this
 
   @last: (callback) ->
     record = new this()
-    record._find_last callback
+    record._findLast callback
 
-  _find_last: (callback) ->
-    @_mongooseModel.find({}).sort({_id: -1}).limit(1).exec (err, result) ->
+  _findLast: (callback) ->
+    @_mongooseModel.find({}).sort({_id: -1}).limit(1).exec (err, result) =>
       if err
-        console.error err
+        @_processError err, callback
       else
-        callback result
+        if result
+          @setAttributesFromDatabase(result)
+          callback this
+        else
+          callback null
+
+  @findById: (id, callback) ->
+    record = new this()
+    record._findById id, callback
+
+  _findById: (id, callback) ->
+    @_mongooseModel.findById id, (err, result) =>
+      if err
+        @_processError err, callback
+      else
+        if result
+          @setAttributesFromDatabase(result)
+          callback this
+        else
+          callback null
+
+  isPersisted: -> !!@getId()
+
+  setAttributesFromDatabase: (record) ->
+    if record._doc?
+      what = record._doc
+    else
+      what = record
+    _.each(what, (val, key) => 
+      @_attributes[key] = val
+    )
+  
+  _processError: (err, callback) ->
+    console.error err
+    callback null

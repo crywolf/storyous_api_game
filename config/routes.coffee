@@ -6,3 +6,4 @@ module.exports = (app) ->
     res.send 'Storyous backend API test'
 
   app.post '/game', api.games.create
+  app.put '/game/:gameId', api.games.addTurn

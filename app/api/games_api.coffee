@@ -1,5 +1,6 @@
 ApiController = require './api_controller'
 Game = require '../models/game'
+GamePresenter = require '../presenters/game_presenter'
 
 module.exports = class GamesApi extends ApiController
 
@@ -8,8 +9,8 @@ module.exports = class GamesApi extends ApiController
       res.status(422).send(); return
 
     game = new Game
-    game.create req.body.name, (output) ->
-      res.send output
+    game.create req.body.name, (game) ->
+      res.send GamePresenter.toJson game
 
   addTurn: (req, res) ->
     x = parseInt req.body.x
@@ -21,10 +22,11 @@ module.exports = class GamesApi extends ApiController
       if game?.isOver()
         res.status(400).send()
       else if game
-        game.addTurn x, y, (output) ->
-          unless output 
+        game.addTurn x, y, (game) ->
+          console.log game.illegalTurnDetected()
+          if game.illegalTurnDetected()
             res.status(400).send()
           else
-            res.send output
+            res.send GamePresenter.toJson game
       else
         res.status(404).send()

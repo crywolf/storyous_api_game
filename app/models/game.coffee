@@ -57,16 +57,8 @@ module.exports = class Game extends Model
       client: clientPosition
     }
 
-    @save attrs, (record) ->
-      output = {
-          "gameId": record.getId(),
-          "name": record.getAttribute('name'),
-          "gameOver": record.getAttribute('gameOver'),
-          "score": record.getAttribute('score'),
-          "playground": record.getAttribute('playground')
-      }
-      
-      callback output
+    @save attrs, (record) ->      
+      callback record
 
   addTurn: (x, y, callback) ->
     playground = @getAttribute 'playground'
@@ -75,21 +67,17 @@ module.exports = class Game extends Model
     origClientPosition = new Point(origClientArray[0], origClientArray[1])
 
     clientPosition = new Point(x, y)
-#    isIllegal if @_isIllegalTurn(origClientPosition, clientPosition)
+    
+    if @_isIllegalTurn(origClientPosition, clientPosition)
+      @save {gameOver: true}, (record) ->
+        callback record
+      return
 
     gameOver = if @_canMakeTurn(clientPosition) then false else true
 
     if gameOver # client looses
       @save {gameOver: true}, (record) ->
-        output = {
-          "gameId": record.getId(),
-          "name": record.getAttribute('name'),
-          "gameOver": record.getAttribute('gameOver'),
-          "score": record.getAttribute('score'),
-          "playground": record.getAttribute('playground')
-        }
-
-        callback output
+        callback record
 
     else
       # client turn
@@ -105,15 +93,8 @@ module.exports = class Game extends Model
 
       if gameOver # server looses
         @save {gameOver: true, score: @getAttribute('score') + 1}, (record) ->
-          output = {
-            "gameId": record.getId(),
-            "name": record.getAttribute('name'),
-            "gameOver": record.getAttribute('gameOver'),
-            "score": record.getAttribute('score'),
-            "playground": record.getAttribute('playground')
-          }
+          callback record
 
-          callback output
       else      
         playground[origServerPosition.x][origServerPosition.y] = 0
         playground[serverPosition.x][serverPosition.y] = 3
@@ -127,25 +108,22 @@ module.exports = class Game extends Model
         }
 
         @save attrs, (record) ->
-          output = {
-            "gameId": record.getId(),
-            "name": record.getAttribute('name'),
-            "gameOver": record.getAttribute('gameOver'),
-            "score": record.getAttribute('score'),
-            "playground": record.getAttribute('playground')
-          }
-
-          callback output
+          callback record
 
   isOver: ->
     @getAttribute 'gameOver'
+
+  illegalTurnDetected: ->
+    !!@illegalTurn
 
   _canMakeTurn: (position) ->
     playground = @getAttribute 'playground'
     playground[position.x][position.y] == 0
 
   _isIllegalTurn: (old_pos, new_pos) ->
-    #doplnit
+    return (@illegalTurn = true) if new_pos.x == old_pos.x && new_pos.y == old_pos.y
+    return (@illegalTurn = true) if new_pos.x != old_pos.x && new_pos.y != old_pos.y
+    return (@illegalTurn = true) if new_pos.x - old_pos.x > 1 || new_pos.y - old_pos.y > 1
 
   _timeExpired: ->
     # kontrolovat updated_at

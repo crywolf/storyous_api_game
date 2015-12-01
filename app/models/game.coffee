@@ -1,5 +1,6 @@
 Model = require './model'
 Point = require '../../lib/point'
+Scoreboard = require './scoreboard'
 
 module.exports = class Game extends Model
 
@@ -92,8 +93,10 @@ module.exports = class Game extends Model
       gameOver = if @_canMakeTurn(serverPosition) then false else true
 
       if gameOver # server looses
-        @save {gameOver: true, score: @getAttribute('score') + 1}, (record) ->
-          callback record
+        @save {gameOver: true, score: @getAttribute('score') + 1}, (record) =>
+          scoreboard = new Scoreboard(name: @getAttribute('name'))
+          scoreboard.addScore (score) ->
+            callback record
 
       else      
         playground[origServerPosition.x][origServerPosition.y] = 0

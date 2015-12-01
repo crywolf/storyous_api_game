@@ -23,7 +23,6 @@ module.exports = class GamesApi extends ApiController
         res.status(400).send()
       else if game
         game.addTurn x, y, (game) ->
-          console.log game.illegalTurnDetected()
           if game.illegalTurnDetected()
             res.status(400).send()
           else

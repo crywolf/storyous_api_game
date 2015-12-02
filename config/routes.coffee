@@ -7,3 +7,6 @@ module.exports = (app) ->
 
   app.post '/game', api.games.create
   app.put '/game/:gameId', api.games.addTurn
+
+  app.get '/scoreboard', api.scoreboard.index
+  app.get '/scoreboard/:userName', api.scoreboard.score

@@ -91,6 +91,35 @@ module.exports = class Model
         else
           callback null
 
+  @findOne: (criteria, callback) ->
+    record = new this()
+    record._findOne criteria, callback
+
+  _findOne: (criteria, callback) ->
+    @_mongooseModel.findOne criteria, (err, result) =>
+      if err
+        @_processError err, callback
+      else
+        if result
+          @setAttributesFromDatabase(result)
+          callback this
+        else
+          callback null
+
+  @findAll: (callback) ->
+    record = new this()
+    record._findAll callback
+
+  _findAll: (callback) ->
+    @_mongooseModel.find {}, (err, result) =>
+      if err
+        @_processError err, callback
+      else
+        if result
+          callback result
+        else
+          callback null
+
   isPersisted: -> !!@getId()
 
   setAttributesFromDatabase: (record) ->

@@ -11,6 +11,14 @@ module.exports = class Scoreboard extends Model
     }
   }
 
+  getAllScores: (callback) ->
+    Scoreboard.findAll (scores) ->
+      callback scores
+
+  getScore: (name, callback) ->
+    Scoreboard.findOne {name: name}, (score) ->
+      callback score
+
   addScore: (callback) ->
     userName = @getAttribute 'name'
 
